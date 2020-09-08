@@ -1,3 +1,7 @@
 domain: k7o.io
 repo: github.com/k7o-io/networkpolicy-operator
+resources:
+- group: networking
+  kind: NetworkPolicy
+  version: v1alpha1
 version: "2"

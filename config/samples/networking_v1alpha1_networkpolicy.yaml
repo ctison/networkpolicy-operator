@@ -1,0 +1,7 @@
+apiVersion: networking.k7o.io/v1alpha1
+kind: NetworkPolicy
+metadata:
+  name: networkpolicy-sample
+spec:
+  # Add fields here
+  foo: bar
