@@ -1,30 +1,45 @@
 package v1alpha1
 
 import (
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const DefaultResolveEverySeconds uint64 = 300
 
 // NetworkPolicySpec defines the desired state of NetworkPolicy
 type NetworkPolicySpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Include native NetworkPolicy spec
+	PodSelector metav1.LabelSelector                    `json:"podSelector"`
+	Ingress     []networkingv1.NetworkPolicyIngressRule `json:"ingress,omitempty"`
+	Egress      []NetworkPolicyEgressRule               `json:"egress,omitempty"`
+	PolicyTypes []networkingv1.PolicyType               `json:"policyTypes,omitempty"`
 
-	// Foo is an example field of NetworkPolicy. Edit NetworkPolicy_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Time interval in seconds to periodically resolve hostnames to IPs from DNS.
+	// Defaults to 300 (5m).
+	ResolveEverySeconds *uint64 `json:"resolveEverySeconds,omitempty"`
 }
 
 // NetworkPolicyStatus defines the observed state of NetworkPolicy
 type NetworkPolicyStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	NetworkPolicyName *string `json:"networkPolicyName,omitempty"`
+}
+
+type NetworkPolicyEgressRule struct {
+	Ports []networkingv1.NetworkPolicyPort `json:"ports,omitempty"`
+	To    []NetworkPolicyPeer              `json:"to,omitempty"`
+}
+
+type NetworkPolicyPeer struct {
+	networkingv1.NetworkPolicyPeer `json:",inline"`
+	Domain                         *string `json:"domain,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
 // NetworkPolicy is the Schema for the networkpolicies API
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn name=Interval type= JSONPath=.spec.
 type NetworkPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

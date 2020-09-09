@@ -3,5 +3,9 @@ kind: NetworkPolicy
 metadata:
   name: networkpolicy-sample
 spec:
-  # Add fields here
-  foo: bar
+  podSelector: {}
+  egress:
+    - to:
+        - domain: api.github.com
+      ports:
+        - port: 443
