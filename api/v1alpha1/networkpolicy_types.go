@@ -7,7 +7,7 @@ import (
 
 const DefaultResolveEverySeconds uint64 = 300
 
-// NetworkPolicySpec defines the desired state of NetworkPolicy
+// NetworkPolicySpec defines the desired state of NetworkPolicy.
 type NetworkPolicySpec struct {
 	// Include native NetworkPolicy spec
 	PodSelector metav1.LabelSelector                    `json:"podSelector"`
@@ -20,7 +20,7 @@ type NetworkPolicySpec struct {
 	ResolveEverySeconds *uint64 `json:"resolveEverySeconds,omitempty"`
 }
 
-// NetworkPolicyStatus defines the observed state of NetworkPolicy
+// NetworkPolicyStatus defines the observed state of NetworkPolicy.
 type NetworkPolicyStatus struct {
 	NetworkPolicyName *string `json:"networkPolicyName,omitempty"`
 }
@@ -50,7 +50,7 @@ type NetworkPolicy struct {
 
 // +kubebuilder:object:root=true
 
-// NetworkPolicyList contains a list of NetworkPolicy
+// NetworkPolicyList contains a list of NetworkPolicy.
 type NetworkPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

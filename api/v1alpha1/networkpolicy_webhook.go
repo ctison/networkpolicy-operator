@@ -20,7 +20,7 @@ func (r *NetworkPolicy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 var _ webhook.Defaulter = &NetworkPolicy{}
 
-// Default implements webhook.Defaulter so a webhook will be registered for the type
+// Default implements webhook.Defaulter so a webhook will be registered for the type.
 func (r *NetworkPolicy) Default() {
 	networkpolicylog.Info("default", "name", r.Name)
 	resolveEverySeconds := DefaultResolveEverySeconds
@@ -34,7 +34,7 @@ func (r *NetworkPolicy) Default() {
 
 var _ webhook.Validator = &NetworkPolicy{}
 
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
+// ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (r *NetworkPolicy) ValidateCreate() error {
 	networkpolicylog.Info("validate create", "name", r.Name)
 
@@ -42,7 +42,7 @@ func (r *NetworkPolicy) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
+// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *NetworkPolicy) ValidateUpdate(old runtime.Object) error {
 	networkpolicylog.Info("validate update", "name", r.Name)
 
@@ -50,7 +50,7 @@ func (r *NetworkPolicy) ValidateUpdate(old runtime.Object) error {
 	return nil
 }
 
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
+// ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
 func (r *NetworkPolicy) ValidateDelete() error {
 	networkpolicylog.Info("validate delete", "name", r.Name)
 

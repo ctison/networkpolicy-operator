@@ -18,7 +18,7 @@ import (
 	"github.com/k7o-io/networkpolicy-operator/api/v1alpha1"
 )
 
-// NetworkPolicyReconciler reconciles a NetworkPolicy object
+// NetworkPolicyReconciler reconciles a NetworkPolicy object.
 type NetworkPolicyReconciler struct {
 	client.Client
 	Log    logr.Logger
@@ -45,61 +45,7 @@ func (r *NetworkPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	}
 
 	// Compute underlying NetworkPolicy
-	state := &networkingv1.NetworkPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "networking.k8s.io/v1",
-			Kind:       "NetworkPolicy",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      networkPolicy.Name,
-			Namespace: networkPolicy.Namespace,
-		},
-		Spec: networkingv1.NetworkPolicySpec{
-			Egress:      make([]networkingv1.NetworkPolicyEgressRule, len(networkPolicy.Spec.Egress)),
-			Ingress:     networkPolicy.Spec.Ingress,
-			PodSelector: networkPolicy.Spec.PodSelector,
-			PolicyTypes: networkPolicy.Spec.PolicyTypes,
-		},
-	}
-	for i, egress := range networkPolicy.Spec.Egress {
-		state.Spec.Egress[i].Ports = egress.Ports
-		if egress.To == nil {
-			continue
-		}
-		state.Spec.Egress[i].To = make([]networkingv1.NetworkPolicyPeer, 0, len(egress.To))
-		for _, to := range egress.To {
-			if to.Domain == nil {
-				state.Spec.Egress[i].To = append(state.Spec.Egress[i].To, networkingv1.NetworkPolicyPeer{
-					NamespaceSelector: to.NamespaceSelector,
-					IPBlock:           to.IPBlock,
-					PodSelector:       to.PodSelector,
-				})
-				continue
-			}
-			ipAddrs, err := net.LookupIP(*to.Domain)
-			if err != nil {
-				log.Error(err, "cannot resolve domain... skipping", "domain", *to.Domain)
-				continue
-			}
-			if len(ipAddrs) == 0 {
-				log.Info("domain resolves to no IP... skipping", "domain", *to.Domain)
-				continue
-			}
-			for _, ipAddr := range ipAddrs {
-				state.Spec.Egress[i].To = append(state.Spec.Egress[i].To, networkingv1.NetworkPolicyPeer{
-					NamespaceSelector: to.NamespaceSelector,
-					IPBlock: &networkingv1.IPBlock{
-						CIDR: ipAddr.String() + "/32",
-					},
-					PodSelector: to.PodSelector,
-				})
-			}
-		}
-	}
-	if err := ctrl.SetControllerReference(networkPolicy, state, r.Scheme); err != nil {
-		log.Error(err, "!!!PANIC cannot set controller reference", "namespace", state.Namespace, "name", state.Name)
-		return ctrl.Result{}, err
-	}
+	state := r.makeNetworkPolicy(log, networkPolicy)
 
 	// Check if NetworkPolicy already exists, if not create a new one
 	found := &networkingv1.NetworkPolicy{}
@@ -146,16 +92,57 @@ func (r *NetworkPolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *NetworkPolicyReconciler) makeNetworkPolicy(from *v1alpha1.NetworkPolicy) (*networkingv1.NetworkPolicy, error) {
-	netpol := &networkingv1.NetworkPolicy{
-		ObjectMeta: from.ObjectMeta,
+func (r *NetworkPolicyReconciler) makeNetworkPolicy(log logr.Logger, networkPolicy *v1alpha1.NetworkPolicy) *networkingv1.NetworkPolicy {
+	state := &networkingv1.NetworkPolicy{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "networking.k8s.io/v1",
+			Kind:       "NetworkPolicy",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      networkPolicy.Name,
+			Namespace: networkPolicy.Namespace,
+		},
 		Spec: networkingv1.NetworkPolicySpec{
-			PodSelector: from.Spec.PodSelector,
-			Ingress:     from.Spec.Ingress,
-			PolicyTypes: from.Spec.PolicyTypes,
-			Egress:      nil,
+			Egress:      make([]networkingv1.NetworkPolicyEgressRule, len(networkPolicy.Spec.Egress)),
+			Ingress:     networkPolicy.Spec.Ingress,
+			PodSelector: networkPolicy.Spec.PodSelector,
+			PolicyTypes: networkPolicy.Spec.PolicyTypes,
 		},
 	}
-	// egress := make([]networkingv1.NetworkPolicyEgressRule, 0, len(from.Spec.Egress))
-	return netpol, nil
+	for i, egress := range networkPolicy.Spec.Egress {
+		state.Spec.Egress[i].Ports = egress.Ports
+		if egress.To == nil {
+			continue
+		}
+		state.Spec.Egress[i].To = make([]networkingv1.NetworkPolicyPeer, 0, len(egress.To))
+		for _, to := range egress.To {
+			if to.Domain == nil {
+				state.Spec.Egress[i].To = append(state.Spec.Egress[i].To, networkingv1.NetworkPolicyPeer{
+					NamespaceSelector: to.NamespaceSelector,
+					IPBlock:           to.IPBlock,
+					PodSelector:       to.PodSelector,
+				})
+				continue
+			}
+			ipAddrs, err := net.LookupIP(*to.Domain)
+			if err != nil {
+				log.Error(err, "failed to resolve domain: skipping", "domain", *to.Domain)
+			}
+			if len(ipAddrs) == 0 {
+				log.Info("domain resolves to no IP: skipping", "domain", *to.Domain)
+				continue
+			}
+			for _, ipAddr := range ipAddrs {
+				state.Spec.Egress[i].To = append(state.Spec.Egress[i].To, networkingv1.NetworkPolicyPeer{
+					NamespaceSelector: to.NamespaceSelector,
+					IPBlock: &networkingv1.IPBlock{
+						CIDR: ipAddr.String() + "/32",
+					},
+					PodSelector: to.PodSelector,
+				})
+			}
+		}
+	}
+	_ = ctrl.SetControllerReference(networkPolicy, state, r.Scheme)
+	return state
 }
