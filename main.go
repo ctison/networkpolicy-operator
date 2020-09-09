@@ -58,6 +58,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "NetworkPolicy")
 		os.Exit(1)
 	}
+	if err = (&networkingv1alpha1.NetworkPolicy{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "NetworkPolicy")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
