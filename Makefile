@@ -1,3 +1,4 @@
+SHELL := bash --noprofile --norc -O nullglob -euo pipefail
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
@@ -14,8 +15,9 @@ endif
 all: manager
 
 # Run tests
+KUBEBUILDER_ASSETS ?= /usr/local/bin/
 test: generate fmt vet manifests
-	go test ./... -coverprofile cover.out
+	KUBEBUILDER_ASSETS=$(KUBEBUILDER_ASSETS) go test ./... -coverprofile cover.out
 
 # Build manager binary
 manager: generate fmt vet
