@@ -16,8 +16,6 @@ func (r *NetworkPolicy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 // +kubebuilder:webhook:path=/mutate-networking-k7o-io-v1alpha1-networkpolicy,mutating=true,failurePolicy=fail,groups=networking.k7o.io,resources=networkpolicies,verbs=create;update,versions=v1alpha1,name=mnetworkpolicy.kb.io
 
 var _ webhook.Defaulter = &NetworkPolicy{}
@@ -25,8 +23,10 @@ var _ webhook.Defaulter = &NetworkPolicy{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *NetworkPolicy) Default() {
 	networkpolicylog.Info("default", "name", r.Name)
-
-	// TODO(user): fill in your defaulting logic.
+	resolveEverySeconds := DefaultResolveEverySeconds
+	if r.Spec.ResolveEverySeconds != nil {
+		r.Spec.ResolveEverySeconds = &resolveEverySeconds
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

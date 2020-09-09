@@ -136,11 +136,7 @@ func (r *NetworkPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 		}
 	}
 
-	resolveEverySeconds := v1alpha1.DefaultResolveEverySeconds
-	if networkPolicy.Spec.ResolveEverySeconds != nil {
-		resolveEverySeconds = *networkPolicy.Spec.ResolveEverySeconds
-	}
-	return ctrl.Result{RequeueAfter: time.Duration(resolveEverySeconds) * time.Second}, nil
+	return ctrl.Result{RequeueAfter: time.Duration(*networkPolicy.Spec.ResolveEverySeconds) * time.Second}, nil
 }
 
 func (r *NetworkPolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
